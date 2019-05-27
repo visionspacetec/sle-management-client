@@ -1,0 +1,484 @@
+openapi: 3.0.1
+info:
+  title: sle-management-client
+  description: Python SLE Provider Management Client
+  contact:
+    email: oss@visionspace.com
+  license:
+    name: AGPL-3.0
+    url: https://opensource.org/licenses/AGPL-3.0
+  version: 0.1.0
+externalDocs:
+  description: Find out more about the sle-management-client
+  url: https://github.com/visionspacetec/sle-management-client
+servers:
+- url: http://localhost:2048/api
+- url: https://localhost:2048/api
+tags:
+- name: service-instances
+  description: Access the loaded service instances
+- name: sle-config
+  description: Change the SLE configuration parameters
+- name: cortex-config
+  description: Change the Cortex configuration parameters
+- name: cortex-command
+  description: Send commands to the Cortex
+paths:
+  /service-instances:
+    get:
+      tags:
+      - service-instances
+      summary: Get a list of the loaded service instances
+      operationId: get_si_list
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/si-list'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+    delete:
+      tags:
+      - service-instances
+      summary: Deletes all loaded service instances
+      operationId: delete_si_list
+      responses:
+        202:
+          description: Accepted
+          content: {}
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+  /service-instances/{si}:
+    get:
+      tags:
+      - service-instances
+      summary: Find service instance by name
+      description: Returns a single service instance
+      operationId: get_si
+      parameters:
+      - name: si
+        in: path
+        description: Service instance identifier
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/service-instance'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        404:
+          description: Service instance not found
+          content: {}
+    delete:
+      tags:
+      - service-instances
+      summary: Deletes a service instance by name
+      operationId: delete_si
+      parameters:
+      - name: si
+        in: path
+        description: Service instance to delete
+        required: true
+        schema:
+          type: string
+      responses:
+        202:
+          description: Accepted
+          content: {}
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        404:
+          description: Service instance not found
+          content: {}
+    post:
+      tags:
+      - service-instances
+      summary: Adds a service instance
+      operationId: post_si
+      parameters:
+      - name: si
+        in: path
+        description: New service instance identifier
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/service-instance'
+      responses:
+        201:
+          description: Created
+          content: {}
+        400:
+          description: Bad request
+          content: {}
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        409:
+          description: Conflict with existing service instance
+          content: {}
+    patch:
+      tags:
+      - service-instances
+      summary: Updates one or more service instance parameters
+      operationId: patch_si
+      parameters:
+      - name: si
+        in: path
+        description: Service instance that needs to be updated
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/sle-config-patch'
+      responses:
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        405:
+          description: Invalid input
+          content: {}
+  /sle-config:
+    get:
+      tags:
+      - sle-config
+      summary: Get a list of the available configuration parameters
+      operationId: get_sle_config_list
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sle-config'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        500:
+          description: Internal server error
+          content: {}
+  /sle-config/{param}:
+    get:
+      tags:
+      - sle-config
+      summary: Returns the current value of a SLE configuration parameter
+      operationId: get_sle_config
+      parameters:
+      - name: param
+        in: path
+        description: Name of the parameter to return
+        required: true
+        schema:
+          $ref: '#/components/schemas/sle-config-params'
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sle-config-params-values'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        404:
+          description: SLE configuration parameter not found
+          content: {}
+        500:
+          description: Internal server error
+          content: {}
+    patch:
+      tags:
+      - sle-config
+      summary: Update a SLE configuration parameter
+      operationId: patch_sle_config
+      parameters:
+      - name: param
+        in: path
+        description: Name of the parameter that needs to be updated
+        required: true
+        schema:
+          $ref: '#/components/schemas/sle-config-params'
+      requestBody:
+        content:
+          application/json:
+              schema:
+                $ref: '#/components/schemas/sle-config-params-values'
+      responses:
+        202:
+          description: Accepted
+          content: {}
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        404:
+          description: SLE configuration parameter not found
+          content: {}
+        500:
+          description: Internal server error
+          content: {}
+  /cortex-config:
+    get:
+      tags:
+      - cortex-config
+      summary: Get a list of the available configuration tables
+      operationId: get_cortex_config_table_list
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/cortex-config-table-list'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        500:
+          description: Internal server error
+          content: {}
+  /cortex-config/{param}:
+    get:
+      tags:
+      - cortex-config
+      summary: Returns the parameter names of a Cortex configuration table
+      operationId: get_cortex_config_table
+      parameters:
+      - name: param
+        in: path
+        description: Name of the table to return
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/cortex-config-table'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        404:
+          description: Cortex configuration table not found
+          content: {}
+        500:
+          description: Internal server error
+          content: {}
+  /cortex-command:
+    get:
+      tags:
+        - cortex-command
+      summary: Returns a list of the availiable Cortex commands
+      operationId: get_cortex_command_list
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/cortex-command-list'
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        500:
+          description: Internal server error
+          content: {}
+    post:
+      tags:
+        - cortex-command
+      summary: Send a command to the Cortex
+      operationId: post_cortex_command
+      requestBody:
+        content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/cortex-command'
+      responses:
+        202:
+          description: Accepted
+          content: {}
+        400:
+          description: Bad request
+          content: {}
+        401:
+          $ref: '#/components/responses/UnauthorizedError'
+        500:
+          description: Internal server error
+          content: {}
+components:
+  responses:
+    UnauthorizedError:
+      description: Authentication information is missing or invalid
+      headers:
+        WWW_Authenticate:
+          schema:
+            type: string
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    si-list:
+      type: array
+      description: List of all loaded service instances, represented by their service instance identifier
+      items:
+        type: string
+      example: [sagr=1.spack=VST1-PASS0001.rsl-fg=1.raf=ontl1]
+    sle-config-params:
+      type: string
+      description: Configurable parameter set
+      enum:
+        - authentication-delay
+        - transmit-queue-size
+        - startup-timer
+        - allow-non-use-heartbeat
+        - min-hearbeat
+        - max-heartbeat
+        - min-deadfactor
+        - max-deadfactor
+        - max-trace-size
+        - min-reporting-cycle
+        - max-reporting-cycle
+        - server-types
+        - local-id
+        - local-password
+        - remote-peers
+    sle-config-params-values:
+      oneOf:
+        - type: integer
+          nullable: true
+        - type: boolean
+        - type: string
+        - type: array
+    sle-config:
+      type: array
+      description: List of all configurable SLE parameters
+      items:
+        $ref: '#/components/schemas/sle-config-params'
+      example: [authentication-delay, startup-timer]
+    sle-config-patch:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/sle-config-params-values'
+      example: 
+        authentication-delay: 600
+        transmit-queue-size: 23
+    service-instance:
+      type: object
+      description: Describes a service instance
+      properties:
+        start_time:
+          type: integer
+          nullable: true
+          default: null
+          example: null
+          description: ToDo - not yet supported
+        stop_time:
+          type: integer
+          nullable: true
+          default: null
+          example: null
+          description: ToDo - not yet supported
+        initiator_id:
+          type: string
+          default: SLE_USER
+          example: SLE_USER
+        responder_id:
+          type: string
+          default: SLE_PROVIDER
+          example: SLE_PROVIDER
+        return_timeout_period:
+          type: integer
+          default: 15
+          example: 15
+        delivery_mode:
+          type: string
+          enum:
+          - TIMELY_ONLINE
+          - COMPLETE_ONLINE
+          - OFFLINE
+          default: TIMELY_ONLINE
+          example: TIMELY_ONLINE
+          description: ToDo - Only timely online supported
+        initiator:
+          type: string
+          enum:
+          - USER
+          - PROVIDER
+          default: USER
+          example: USER
+        permitted_frame_quality:
+          type: array
+          items:
+            type: string
+            enum:
+            - allFrames
+            - erredFramesOnly
+            - goodFramesOnly
+          default: [allFrames]
+          example: [allFrames]
+        latency_limit:
+          type: integer
+          default: 9
+          example: 9
+        transfer_buffer_size:
+          type: integer
+          default: 1
+          example: 1
+        report_cycle:
+          type: integer
+          nullable: true
+          default: null
+          example: null
+        requested_frame_quality:
+          type: string
+          enum:
+            - allFrames
+            - erredFramesOnly
+            - goodFramesOnly
+          default: allFrames
+          example: allFrames
+        state:
+          type: string
+          default: unbound
+          example: unbound
+    cortex-config-table-list:
+      type: array
+      description: List of the Cortex configuration table names
+      items:
+        type: string
+      example: ["tcu", "ifm1"]
+    cortex-config-table:
+      type: array
+      description: List of all configuration parameters in a table
+      items:
+        type: string
+      example: [flow_id, bit_rate, tc_tone_f1]
+    cortex-command-list:
+      type: array
+      description: List of all availiable Cortex commands
+      items:
+        type: string
+      example: [start-telemetry, stop-telemetry]
+    cortex-command:
+      type: object
+      description: Cortex command with parameters
+      properties:
+        command:
+          type: string
+          description: Command to execute on the Cortex
+          example: start-telemetry
+        args:
+          type: array
+          description: The arguments needed to execute the command
+          items:
+            type: string
+          example: [TMUA]
+      example: {command: start-telemetry, args:[TMUA]}
+security:
+  - basicAuth: []
